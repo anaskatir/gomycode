@@ -3,6 +3,8 @@ import { systemPrompt } from "./prompts";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+const GROQ_CHAT_MODEL = "openai/gpt-oss-20b";
 
 type GeminiInput = 
   | { type: "text"; text: string }
@@ -33,40 +35,35 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
     parts.push({ text: promptText });
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        },
-        contents: [{
-          parts: parts
-        }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
+  const body = JSON.stringify({
+    systemInstruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents: [{ parts }],
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  let lastError = "Gemini unavailable";
+  for (const model of GEMINI_MODELS) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body },
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content) return content;
+      lastError = `Gemini ${model}: empty response`;
+      continue;
     }
-  );
-
-  if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+    lastError = `Gemini API error: ${response.status} ${errorText}`;
+    if (response.status !== 404 && response.status !== 503) throw new Error(lastError);
   }
+  throw new Error(lastError);
 
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!content) {
-    throw new Error("Invalid response structure from Gemini");
-  }
-
-  return content;
 }
 
 async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<string> {
@@ -110,7 +107,7 @@ async function callGroqLlama(text: string, errorFeedback?: string): Promise<stri
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: GROQ_CHAT_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: promptText }
