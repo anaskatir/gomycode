@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { SAMPLE_PHRASES } from "@/lib/samples";
 import type { TranscribeResponse } from "@/lib/types";
+import { DemoAudio } from "./DemoAudio";
 
 type Source = "voice" | "text";
 
@@ -120,8 +121,10 @@ export function Recorder({ busy, onStart, onResult, onError }: Props) {
         </button>
       </form>
 
+      <DemoAudio busy={busy} onStart={onStart} onResult={onResult} onError={onError} />
+
       <div className="mt-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Exemples</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Exemples en texte</p>
         <div className="flex flex-wrap gap-2">
           {SAMPLE_PHRASES.map((s) => (
             <button
