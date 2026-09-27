@@ -15,7 +15,7 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
     throw new Error("GEMINI_API_KEY is not set");
   }
 
-  const parts: any[] = [];
+  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
   if (input.type === "audio") {
     parts.push({
@@ -81,7 +81,7 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
       "Authorization": `Bearer ${GROQ_API_KEY}`
     },
     // Le FormData natif dans Node set automatiquement le Content-Type avec le boundary
-    body: formData as any
+    body: formData as unknown as BodyInit
   });
 
   if (!response.ok) {
@@ -141,7 +141,7 @@ async function fallbackGroq(input: GeminiInput): Promise<{ extraction: Extractio
     const rawResponse = await callGroqLlama(textToExtract);
     const json = JSON.parse(rawResponse);
     return { extraction: extractionSchema.parse(json), provider: "groq" };
-  } catch (e: any) {
+  } catch (e: unknown) {
     const errorMessage = e instanceof Error ? e.message : String(e);
     const retryResponse = await callGroqLlama(textToExtract, errorMessage);
     const json = JSON.parse(retryResponse);
@@ -156,7 +156,7 @@ export async function extractFromText(text: string): Promise<{ extraction: Extra
       const json = JSON.parse(rawResponse);
       const extraction = extractionSchema.parse(json);
       return { extraction, provider: "gemini" };
-    } catch (e: any) {
+    } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const retryResponse = await callGemini({ type: "text", text }, errorMessage);
       const json = JSON.parse(retryResponse);
@@ -176,7 +176,7 @@ export async function extractFromAudio(audio: Buffer, mimeType: string): Promise
       const json = JSON.parse(rawResponse);
       const extraction = extractionSchema.parse(json);
       return { extraction, provider: "gemini" };
-    } catch (e: any) {
+    } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const retryResponse = await callGemini({ type: "audio", buffer: audio, mimeType }, errorMessage);
       const json = JSON.parse(retryResponse);

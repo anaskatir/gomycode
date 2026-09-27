@@ -1,0 +1,264 @@
+[
+  {
+    "file": "01.m4a",
+    "phrase": "Karim Bakkal khda tlata kilo dial sokkar, khallas mia w baqi lih miatayn",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Karim Bakkal",
+      "amount_paid": 100,
+      "amount_credit": 200,
+      "items": [
+        { "product": "sucre", "quantity": 3 }
+      ]
+    }
+  },
+  {
+    "file": "02.m4a",
+    "phrase": "Fatima khdat jouj ltr dial l7lib w bakiya dial atay, khallsat 20 derham w bqa 3liha 15 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Fatima",
+      "amount_paid": 20,
+      "amount_credit": 15,
+      "items": [
+        { "product": "lait", "quantity": 2 },
+        { "product": "thé", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "03.m4a",
+    "phrase": "Rachid khda khamsa d lkhobzat w wahed lkoka, khallas 10 derham w bqa 3lih 5 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Rachid",
+      "amount_paid": 10,
+      "amount_credit": 5,
+      "items": [
+        { "product": "pain", "quantity": 5 },
+        { "product": "coca", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "04.m4a",
+    "phrase": "Khadija khdat litr dial zit, khallsat khamsin derham w bqa 3liha khamsin derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Khadija",
+      "amount_paid": 50,
+      "amount_credit": 50,
+      "items": [
+        { "product": "huile", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "05.m4a",
+    "phrase": "Youssef khda 10 d lbidat w bota dial gaz, khallas mia w bqa 3lih khamsin derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Youssef",
+      "amount_paid": 100,
+      "amount_credit": 50,
+      "items": [
+        { "product": "œufs", "quantity": 10 },
+        { "product": "bouteille de gaz", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "06.m4a",
+    "phrase": "Hassan khda jouj kilo dial dqiq w bakiya dial mel7a, khallas 20 derham w bqa 3lih 10 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Hassan",
+      "amount_paid": 20,
+      "amount_credit": 10,
+      "items": [
+        { "product": "farine", "quantity": 2 },
+        { "product": "sel", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "07.m4a",
+    "phrase": "Naima khdat tlata d danone w litr dial lma, khallsat 10 derham w bqa 3liha 5 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Naima",
+      "amount_paid": 10,
+      "amount_credit": 5,
+      "items": [
+        { "product": "yaourt", "quantity": 3 },
+        { "product": "eau", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "08.m4a",
+    "phrase": "Said khda kilo dial ruz w bakiya dial qahwa, khallas 10 derham w bqa 3lih 25 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Said",
+      "amount_paid": 10,
+      "amount_credit": 25,
+      "items": [
+        { "product": "riz", "quantity": 1 },
+        { "product": "café", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "09.m4a",
+    "phrase": "Samira khdat jouj sabon w bakiya dial makarona, khallsat 15 derham w bqa 3liha 10 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Samira",
+      "amount_paid": 15,
+      "amount_credit": 10,
+      "items": [
+        { "product": "savon", "quantity": 2 },
+        { "product": "pâtes", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "10.m4a",
+    "phrase": "Omar khda kilo dial sokkar w litr dial l7lib, khallas 10 derham w bqa 3lih 10 derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Omar",
+      "amount_paid": 10,
+      "amount_credit": 10,
+      "items": [
+        { "product": "sucre", "quantity": 1 },
+        { "product": "lait", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "11.m4a",
+    "phrase": "Fatima jat khallsat khamsin derham",
+    "expected": {
+      "intent": "payment",
+      "customer_name": "Fatima",
+      "amount_paid": 50,
+      "amount_credit": 0,
+      "items": []
+    }
+  },
+  {
+    "file": "12.m4a",
+    "phrase": "Zineb jat raddat miatayn derham dial lkarna",
+    "expected": {
+      "intent": "payment",
+      "customer_name": "Zineb",
+      "amount_paid": 200,
+      "amount_credit": 0,
+      "items": []
+    }
+  },
+  {
+    "file": "13.m4a",
+    "phrase": "Rachid khallas 100 derham dial ddayn",
+    "expected": {
+      "intent": "payment",
+      "customer_name": "Rachid",
+      "amount_paid": 100,
+      "amount_credit": 0,
+      "items": []
+    }
+  },
+  {
+    "file": "14.m4a",
+    "phrase": "Khadija khdat jouj khobzat, khallsat jouj derham cash",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Khadija",
+      "amount_paid": 2,
+      "amount_credit": 0,
+      "items": [
+        { "product": "pain", "quantity": 2 }
+      ]
+    }
+  },
+  {
+    "file": "15.m4a",
+    "phrase": "Youssef khda bakiya dial atay w khallas 20 derham kamla",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Youssef",
+      "amount_paid": 20,
+      "amount_credit": 0,
+      "items": [
+        { "product": "thé", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "16.m4a",
+    "phrase": "Karim Tahiri khda litr dial l7lib, khallas mya ryal w bqa 3lih khamsa d derhem",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Karim Tahiri",
+      "amount_paid": 5,
+      "amount_credit": 5,
+      "items": [
+        { "product": "lait", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "17.m4a",
+    "phrase": "Zineb khdat khamsa d lbidat, khallsat miatayn ryal w bqa 3liha jouj derhem",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Zineb",
+      "amount_paid": 10,
+      "amount_credit": 2,
+      "items": [
+        { "product": "œufs", "quantity": 5 }
+      ]
+    }
+  },
+  {
+    "file": "18.m4a",
+    "phrase": "Karim khda kilo dial sokkar, khallas khamsa derham w bqa 3lih sab3a derham",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Karim",
+      "amount_paid": 5,
+      "amount_credit": 7,
+      "items": [
+        { "product": "sucre", "quantity": 1 }
+      ]
+    }
+  },
+  {
+    "file": "19.m4a",
+    "phrase": "Naima khdat l7lib, khallsat khamsa derham w bqa 3liha jouj derhem",
+    "expected": {
+      "intent": "sale",
+      "customer_name": "Naima",
+      "amount_paid": 5,
+      "amount_credit": 2,
+      "items": [
+        { "product": "lait", "quantity": null }
+      ]
+    }
+  },
+  {
+    "file": "20.m4a",
+    "phrase": "khassni n9ad 3and Si Ahmed jouj cartona dial l7lib",
+    "expected": {
+      "intent": "supplier_order",
+      "customer_name": null,
+      "amount_paid": 0,
+      "amount_credit": 0,
+      "items": [
+        { "product": "lait", "quantity": 2 }
+      ]
+    }
+  }
+]

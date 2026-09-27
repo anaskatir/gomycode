@@ -1,0 +1,14 @@
+# Dépendances
+node_modules/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Configuration IDE
+.vscode/
+.idea/
+
+# Fichiers temporaires & logs
+*.log
+.env
