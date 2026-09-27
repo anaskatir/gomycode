@@ -24,7 +24,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Aucun audio reçu." }, { status: 400 });
       }
       const buffer = Buffer.from(await audio.arrayBuffer());
-      result = await extractFromAudio(buffer, audio.type || "audio/webm");
+      // "audio/webm;codecs=opus" → "audio/webm" : Gemini refuse les paramètres de codec
+      const mimeType = (audio.type || "audio/webm").split(";")[0].trim();
+      result = await extractFromAudio(buffer, mimeType);
     } else {
       const body = (await req.json().catch(() => null)) as { text?: string } | null;
       if (!body?.text?.trim()) {

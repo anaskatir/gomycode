@@ -73,8 +73,8 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
   if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not set");
   
   const formData = new FormData();
-  const blob = new Blob([buffer], { type: mimeType });
-  const ext = mimeType.split('/')[1] || "m4a";
+  const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
+  const ext = (mimeType.split("/")[1] || "m4a").split(";")[0];
   formData.append("file", blob, `audio.${ext}`);
   formData.append("model", "whisper-large-v3");
 
@@ -110,7 +110,7 @@ async function callGroqLlama(text: string, errorFeedback?: string): Promise<stri
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: promptText }

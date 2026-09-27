@@ -27,6 +27,8 @@ Les champs attendus pour le JSON :
 - intent: "sale", "payment", "supplier_order", ou "unknown"
 - customer_name: nom du client (ou null)
 - items: tableau d'objets { product: string, quantity: number | null, unit: string | null, price: number | null }
+  → product est TOUJOURS le nom français du produit (sucre, huile, lait, pain, thé, farine, œufs, eau, coca, yaourt, bouteille de gaz, savon, café, sel, riz, pâtes), jamais le mot darija.
+  → unit vaut "kg", "L", "pcs", "paquet" ou "bouteille".
 - amount_total: total en dirhams (ou null)
 - amount_paid: payé en dirhams (ou null)
 - amount_credit: reste à payer/crédit en dirhams (ou null)
@@ -43,7 +45,7 @@ Sortie :
   "intent": "sale",
   "customer_name": "Karim",
   "items": [
-    { "product": "sokkar", "quantity": 3, "unit": "kilo", "price": null }
+    { "product": "sucre", "quantity": 3, "unit": "kg", "price": null }
   ],
   "amount_total": 300,
   "amount_paid": 100,
@@ -60,7 +62,7 @@ Sortie :
   "intent": "sale",
   "customer_name": null,
   "items": [
-    { "product": "atay", "quantity": null, "unit": null, "price": 2.5 }
+    { "product": "thé", "quantity": null, "unit": null, "price": 2.5 }
   ],
   "amount_total": 2.5,
   "amount_paid": null,
@@ -77,7 +79,7 @@ Sortie :
   "intent": "sale",
   "customer_name": "Youssef",
   "items": [
-    { "product": "zit", "quantity": null, "unit": null, "price": null }
+    { "product": "huile", "quantity": null, "unit": null, "price": null }
   ],
   "amount_total": 1100,
   "amount_paid": 1000,
