@@ -39,7 +39,10 @@ export async function POST(req: Request) {
     const payload: TranscribeResponse = { ...result, match };
     return NextResponse.json(payload);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erreur inconnue";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("transcribe failed", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "L'IA n'a pas compris cette phrase. Réessaie, ou tape-la en darija." },
+      { status: 500 },
+    );
   }
 }
