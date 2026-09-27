@@ -1,6 +1,6 @@
 import type { Customer, Reminder, Transaction } from "./types";
 
-/** Message darija envoyé au client avec son nouveau solde, ouvert dans WhatsApp par un lien wa.me. */
+/** Message français pour le client, avec le nouveau solde. Ouvert dans WhatsApp via wa.me. */
 export function buildReminder(customer: Customer, tx: Transaction, shopName: string): Reminder {
   const first = customer.name.split(" ")[0];
   const balance = Math.round(customer.balance * 100) / 100;
@@ -8,16 +8,15 @@ export function buildReminder(customer: Customer, tx: Transaction, shopName: str
 
   let message: string;
   if (tx.intent === "payment") {
-    message = `Salam ${first}, khallasti ${tx.amount_paid} dh lyoum.`;
+    message = `Salam ${first}, tu as payé ${tx.amount_paid} dh aujourd'hui.`;
   } else if (tx.amount_paid > 0) {
-    message = `Salam ${first}, lyoum khditi ${items}, khallasti ${tx.amount_paid} dh.`;
+    message = `Salam ${first}, aujourd'hui : ${items}. Tu as payé ${tx.amount_paid} dh.`;
   } else {
-    message = `Salam ${first}, lyoum khditi ${items} b kredi.`;
+    message = `Salam ${first}, aujourd'hui à crédit : ${items}.`;
   }
 
-  message +=
-    balance > 0 ? ` Baqi 3lik ${balance} dh.` : " Ma baqi 3lik walou, Allah ykhellik.";
-  message += ` Chokran, ${shopName}.`;
+  message += balance > 0 ? ` Il te reste ${balance} dh.` : " Tu ne dois plus rien.";
+  message += ` Merci, ${shopName}.`;
 
   return {
     message,

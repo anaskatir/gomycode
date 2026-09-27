@@ -102,7 +102,7 @@ export default function Home() {
           <div>
             <h1 className="text-xl font-bold tracking-tight text-stone-900">SoukVoice</h1>
             <p className="text-sm text-stone-500">
-              {ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "La Karna qui écoute la darija"}
+              {ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "La Karna, en français ou en darija"}
             </p>
           </div>
         </div>

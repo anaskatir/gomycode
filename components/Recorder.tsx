@@ -90,10 +90,12 @@ export function Recorder({ busy, onStart, onResult, onError }: Props) {
         </button>
         <div className="text-center">
           <p className="text-lg font-semibold text-stone-900">
-            {recording ? `Enregistrement… ${seconds}s` : busy ? "Analyse en cours…" : "Hder b darija"}
+            {recording ? `Enregistrement… ${seconds}s` : busy ? "Analyse en cours…" : "Parle en français"}
           </p>
           <p className="text-sm text-stone-500">
-            {recording ? "Appuie encore pour arrêter" : "Exemple : « Karim khda tlata kilo dial sokkar, khallas mia »"}
+            {recording
+              ? "Appuie encore pour arrêter"
+              : "Exemple : « Karim a pris 3 kilos de sucre, il a payé 100, il reste 200 ». La darija marche aussi."}
           </p>
         </div>
       </div>
@@ -109,7 +111,7 @@ export function Recorder({ busy, onStart, onResult, onError }: Props) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           disabled={busy}
-          placeholder="Ou tape la phrase en darija…"
+          placeholder="Ou tape la phrase en français…"
           className="flex-1 rounded-xl border border-stone-300 px-4 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
         <button
@@ -124,7 +126,7 @@ export function Recorder({ busy, onStart, onResult, onError }: Props) {
       <DemoAudio busy={busy} onStart={onStart} onResult={onResult} onError={onError} />
 
       <div className="mt-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Exemples en texte</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Exemples · français d’abord, darija ensuite</p>
         <div className="flex flex-wrap gap-2">
           {SAMPLE_PHRASES.map((s) => (
             <button

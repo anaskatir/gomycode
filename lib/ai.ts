@@ -74,6 +74,12 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
   const ext = (mimeType.split("/")[1] || "m4a").split(";")[0];
   formData.append("file", blob, `audio.${ext}`);
   formData.append("model", "whisper-large-v3");
+  formData.append("temperature", "0");
+  // Français d'abord : le micro le transcrit bien. La darija reste comprise en secours.
+  formData.append(
+    "prompt",
+    "Karim a pris 3 kilos de sucre, il a payé 100 dirhams, il reste 200. Fatima a remboursé 50 dirhams. Youssef a pris du lait et un yaourt, il a payé 5 dirhams, il reste 20. Karim khda tlata kilo dial sokkar, khallas mia.",
+  );
 
   const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
     method: "POST",

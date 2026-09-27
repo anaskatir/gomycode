@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("transcribe failed", err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: "L'IA n'a pas compris cette phrase. Réessaie, ou tape-la en darija." },
+      { error: "L'IA n'a pas compris. Réessaie en français, lentement, ou tape la phrase." },
       { status: 500 },
     );
   }
