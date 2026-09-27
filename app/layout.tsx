@@ -13,9 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SoukVoice — la Karna qui écoute",
+  title: "Hanouti — la Karna qui écoute",
   description:
     "Assistant vocal pour les épiciers de quartier au Maroc : ventes et crédit, en français, avec la darija en secours.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
