@@ -32,6 +32,9 @@ export function InsightsPanel({ insights }: { insights: Insights | null }) {
 
       <div className="mt-5">
         <SectionTitle>Ce qui se vend le plus</SectionTitle>
+        {top.length === 0 && totals.transactions === 0 && (
+          <p className="mt-1 text-sm text-stone-500">Pas encore de vente enregistrée.</p>
+        )}
         <table className="mt-1 w-full text-sm">
           <tbody className="divide-y divide-stone-100">
             {top.map((p) => (
@@ -101,7 +104,7 @@ export function InsightsPanel({ insights }: { insights: Insights | null }) {
       )}
 
       <p className="mt-4 text-[11px] text-stone-400">
-        Chiffres calculés depuis la Karna ({totals.transactions} transactions). Données de démo inventées.
+        Chiffres calculés depuis tes ventes ({totals.transactions} transactions).
       </p>
     </section>
   );

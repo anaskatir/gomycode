@@ -57,6 +57,7 @@ export function buildMockSeed(now = new Date()): LedgerState {
     name,
     phone: `2126000000${String(i + 1).padStart(2, "0")}`,
     balance: 0,
+    points: 0,
   }));
   const products: Product[] = PRODUCTS.map(([d, f, unit, price], i) => ({
     id: `p${i + 1}`,
