@@ -7,12 +7,22 @@ export function BalanceReminder({ result, onDismiss }: { result: ConfirmResponse
 
   if (!customer || !reminder) {
     return (
-      <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
-        <p className="font-semibold text-sky-900">{INTENT_LABEL[transaction.intent]} enregistrée.</p>
-        <p className="mt-1 text-sm text-sky-800">
+      <section
+        className="glass-card p-5 animate-fade-in-up"
+        style={{ borderColor: "rgba(14, 165, 233, 0.2)" }}
+      >
+        <p className="font-semibold" style={{ color: "var(--primary-dark)" }}>
+          {INTENT_LABEL[transaction.intent]} enregistrée.
+        </p>
+        <p className="mt-1 text-sm" style={{ color: "var(--primary-light)" }}>
           {transaction.items.map((i) => `${i.quantity} ${i.unit} ${i.product}`).join(", ") || "Sans article."}
         </p>
-        <button type="button" onClick={onDismiss} className="mt-3 text-sm font-medium text-sky-900 underline">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-3 text-sm font-medium underline"
+          style={{ color: "var(--primary)" }}
+        >
           Fermer
         </button>
       </section>
@@ -22,16 +32,23 @@ export function BalanceReminder({ result, onDismiss }: { result: ConfirmResponse
   const owes = customer.balance > 0;
 
   return (
-    <section className="rounded-2xl border border-emerald-300 bg-white p-6 shadow-sm">
+    <section
+      className="glass-card p-6 animate-fade-in-up"
+      style={{ borderColor: "rgba(16, 185, 129, 0.25)" }}
+    >
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Enregistré dans la Karna</p>
-          <h2 className="mt-1 text-xl font-semibold text-stone-900">{customer.name}</h2>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "#065f46" }}>
+            Enregistré dans la Karna
+          </p>
+          <h2 className="mt-1 text-xl font-semibold" style={{ color: "var(--foreground)" }}>{customer.name}</h2>
         </div>
         <div className="text-right">
-          <p className="text-xs text-stone-500">Nouveau solde</p>
-          <p className={`text-2xl font-bold ${owes ? "text-rose-600" : "text-emerald-600"}`}>{dh(customer.balance)}</p>
-          <p className="text-xs font-medium text-amber-700">
+          <p className="text-xs" style={{ color: "var(--primary-light)" }}>Nouveau solde</p>
+          <p className="text-2xl font-bold" style={{ color: owes ? "#dc2626" : "#059669" }}>
+            {dh(customer.balance)}
+          </p>
+          <p className="text-xs font-medium" style={{ color: "var(--accent-dark)" }}>
             {customer.points ?? 0} pts
             {transaction.pointsEarned ? ` · +${transaction.pointsEarned}` : ""}
           </p>
@@ -39,8 +56,13 @@ export function BalanceReminder({ result, onDismiss }: { result: ConfirmResponse
       </header>
 
       <div className="mt-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-stone-400">Message pour le client</p>
-        <div className="mt-2 max-w-md rounded-2xl rounded-tl-sm bg-[#dcf8c6] px-4 py-3 text-sm leading-relaxed text-stone-900 shadow-sm">
+        <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--primary-light)" }}>
+          Message pour le client
+        </p>
+        <div
+          className="mt-2 max-w-md rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed shadow-sm"
+          style={{ background: "#dcf8c6", color: "var(--foreground)" }}
+        >
           {reminder.message}
         </div>
       </div>
@@ -50,14 +72,17 @@ export function BalanceReminder({ result, onDismiss }: { result: ConfirmResponse
           href={reminder.waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white hover:brightness-95"
+          className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all hover:brightness-95"
+          style={{ background: "#25D366", boxShadow: "0 4px 16px rgba(37, 211, 102, 0.3)" }}
         >
           <WhatsAppIcon /> Envoyer sur WhatsApp
         </a>
-        <button type="button" onClick={onDismiss} className="rounded-xl border border-stone-300 px-4 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50">
+        <button type="button" onClick={onDismiss} className="btn-secondary px-4 py-3">
           Nouvelle vente
         </button>
-        <span className="text-xs text-stone-400">Numéro fictif de démo · l&apos;envoi automatique sans tap est prévu ensuite.</span>
+        <span className="text-xs" style={{ color: "var(--primary-light)" }}>
+          Numéro fictif de démo · l&apos;envoi automatique sans tap est prévu ensuite.
+        </span>
       </footer>
     </section>
   );

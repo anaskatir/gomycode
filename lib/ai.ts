@@ -26,7 +26,7 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
     });
     const promptText = errorFeedback
       ? `Attention, ta précédente réponse était invalide : ${errorFeedback}. Ré-écoute l'audio et renvoie un JSON valide.`
-      : `Écoute cet audio et extrais les informations de la transaction en JSON.`;
+      : `L'épicier parle français. Écoute cet audio, garde le transcript en français, et extrais la transaction en JSON.`;
     parts.push({ text: promptText });
   } else {
     const promptText = errorFeedback 
@@ -60,7 +60,8 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
     }
     const errorText = await response.text();
     lastError = `Gemini API error: ${response.status} ${errorText}`;
-    if (response.status !== 404 && response.status !== 503) throw new Error(lastError);
+    // 429 = quota du modèle, on essaie le suivant. 404/503 = modèle indisponible.
+    if (response.status !== 404 && response.status !== 503 && response.status !== 429) throw new Error(lastError);
   }
   throw new Error(lastError);
 
@@ -75,10 +76,10 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
   formData.append("file", blob, `audio.${ext}`);
   formData.append("model", "whisper-large-v3");
   formData.append("temperature", "0");
-  // Français d'abord : le micro le transcrit bien. La darija reste comprise en secours.
+  formData.append("language", "fr");
   formData.append(
     "prompt",
-    "Karim a pris 3 kilos de sucre, il a payé 100 dirhams, il reste 200. Fatima a remboursé 50 dirhams. Youssef a pris du lait et un yaourt, il a payé 5 dirhams, il reste 20. Karim khda tlata kilo dial sokkar, khallas mia.",
+    "Karim a pris 5 litres de lait. Fatima a payé 50 dirhams. Youssef a pris 2 kilos de pommes de terre et une bouteille d'eau.",
   );
 
   const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {

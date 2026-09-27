@@ -8,17 +8,17 @@ import type { Insights } from "@/lib/types";
 export function InsightsPanel({ insights }: { insights: Insights | null }) {
   if (!insights) {
     return (
-      <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+      <section className="glass-card p-5">
         <h2 className="text-base font-semibold text-stone-900">Ton business</h2>
         <p className="mt-2 text-sm text-stone-400">Chargement…</p>
       </section>
     );
   }
 
-  const { top, slow, debtors, totals, advice, adviceSource } = insights;
+  const { top, slow, unsold, inventory, debtors, totals, advice, adviceSource } = insights;
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+      <section className="glass-card p-5">
       <header className="flex items-baseline justify-between">
         <h2 className="text-base font-semibold text-stone-900">Ton business</h2>
         <span className="text-xs text-stone-400">7 derniers jours</span>
@@ -41,6 +41,7 @@ export function InsightsPanel({ insights }: { insights: Insights | null }) {
               <tr key={p.product}>
                 <td className="py-1.5 font-medium capitalize text-stone-800">{p.product}</td>
                 <td className="py-1.5 text-right text-stone-500">{p.quantity} vendus</td>
+                <td className="py-1.5 text-right text-stone-500">{p.stock} en stock</td>
                 <td className="py-1.5 text-right font-medium text-stone-700">{dh(p.revenue)}</td>
                 <td className="w-10 py-1.5 text-right">
                   <Trend last={p.last7} prev={p.prev7} />
@@ -49,6 +50,34 @@ export function InsightsPanel({ insights }: { insights: Insights | null }) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {unsold.length > 0 && (
+        <div className="mt-5">
+          <SectionTitle>Ce qui ne se vend pas</SectionTitle>
+          <ul className="mt-1 max-h-40 divide-y divide-stone-100 overflow-y-auto text-sm">
+            {unsold.map((p) => (
+              <li key={p.product} className="flex items-center justify-between py-1.5">
+                <span className="font-medium capitalize text-stone-800">{p.product}</span>
+                <span className="text-xs text-stone-500">{p.stock} {p.unit} en stock</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-5">
+        <SectionTitle>Inventaire</SectionTitle>
+        <ul className="mt-1 max-h-52 divide-y divide-stone-100 overflow-y-auto text-sm">
+          {inventory.map((p) => (
+            <li key={p.product} className="flex items-center justify-between gap-3 py-1.5">
+              <span className="font-medium capitalize text-stone-800">{p.product}</span>
+              <span className="shrink-0 text-right text-xs text-stone-500">
+                {`${p.quantity} ${p.quantity > 1 ? "vendus" : "vendu"} · ${p.stock} ${p.unit}`}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {slow.length > 0 && (

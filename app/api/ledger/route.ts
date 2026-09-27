@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { normalize } from "@/lib/matchCustomer";
 import { pointsForPurchase } from "@/lib/points";
+import { priceSale } from "@/lib/priceSale";
 import { buildReminder } from "@/lib/reminder";
 import { getState, saveState } from "@/lib/store";
-import type { ConfirmResponse, Customer, Extraction, Transaction, TransactionItem } from "@/lib/types";
+import type { ConfirmResponse, Customer, Extraction, Transaction } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -48,38 +48,8 @@ export async function POST(req: Request) {
     state.customers.push(customer);
   }
 
-  // 2. Les articles : on complète quantité, unité et prix avec le catalogue du hanout
-  const items: TransactionItem[] = extraction.items.map((it) => {
-    const product = state.products.find(
-      (p) => normalize(p.name_fr) === normalize(it.product) || normalize(p.name_darija) === normalize(it.product),
-    );
-    return {
-      product: product?.name_fr ?? it.product,
-      quantity: it.quantity ?? 1,
-      unit: it.unit ?? product?.unit ?? "pcs",
-      price: it.price ?? product?.price ?? 0,
-    };
-  });
-
-  // 3. Les montants : on croit la phrase quand elle est complète, sinon on calcule
-  const itemsTotal = round(items.reduce((s, it) => s + it.quantity * it.price, 0));
-  let total: number;
-  let paid: number;
-  let credit: number;
-
-  if (extraction.intent === "payment") {
-    paid = extraction.amount_paid ?? extraction.amount_total ?? 0;
-    total = paid;
-    credit = 0;
-  } else {
-    total =
-      extraction.amount_total ??
-      (extraction.amount_paid !== null && extraction.amount_credit !== null
-        ? extraction.amount_paid + extraction.amount_credit
-        : itemsTotal);
-    paid = extraction.amount_paid ?? (extraction.amount_credit !== null ? Math.max(0, total - extraction.amount_credit) : total);
-    credit = extraction.amount_credit ?? Math.max(0, round(total - paid));
-  }
+  // 2–3. Prix du rayon si la phrase ne donne pas le montant, puis total / payé / crédit
+  const { items, total, paid, credit } = priceSale(extraction, state.products);
 
   // 4. Solde + points fidélité (1 point / 10 dh d'achat)
   const pointsEarned = extraction.intent === "sale" ? pointsForPurchase(total) : 0;

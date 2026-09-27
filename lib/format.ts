@@ -3,6 +3,14 @@ export function dh(n: number | null | undefined): string {
   return `${new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 2 }).format(n)} dh`;
 }
 
+/** 18:30 → 18 h 30 */
+export function formatHour(value: string | null | undefined): string {
+  if (!value) return "";
+  const [h, m] = value.split(":");
+  if (!h || m === undefined) return value;
+  return `${h} h ${m}`;
+}
+
 export function daysAgo(iso: string | null | undefined, now = new Date()): string {
   if (!iso) return "jamais";
   const days = Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);

@@ -13,34 +13,42 @@ export function Ledger({ state, highlightId }: { state: LedgerState; highlightId
   const outstanding = customers.reduce((s, c) => s + Math.max(0, c.balance), 0);
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+    <section className="glass-card p-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-stone-900">La Karna</h2>
-          <p className="text-xs text-stone-400">1 point pour 10 dh d&apos;achat</p>
+          <h2 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>La Karna</h2>
+          <p className="text-xs" style={{ color: "var(--primary-light)" }}>1 point pour 10 dh d&apos;achat</p>
         </div>
-        <p className="text-sm text-stone-500">
-          Total dû : <span className="font-semibold text-rose-600">{dh(outstanding)}</span>
+        <p className="text-sm" style={{ color: "var(--primary-light)" }}>
+          Total dû : <span className="font-semibold" style={{ color: "#dc2626" }}>{dh(outstanding)}</span>
         </p>
       </header>
-      <ul className="mt-3 max-h-80 divide-y divide-stone-100 overflow-y-auto">
+      <ul className="mt-3 max-h-80 divide-y overflow-y-auto" style={{ borderColor: "var(--border)" }}>
         {customers.length === 0 && (
-          <li className="py-6 text-sm text-stone-500">Aucun client pour l&apos;instant. Le premier nom que tu enregistres reste ici.</li>
+          <li className="py-6 text-sm" style={{ color: "var(--primary-light)" }}>
+            Aucun client pour l&apos;instant. Le premier nom que tu enregistres reste ici.
+          </li>
         )}
         {customers.map((c) => (
           <li
             key={c.id}
-            className={`flex items-center justify-between py-2.5 text-sm transition ${
-              highlightId === c.id ? "-mx-2 rounded-lg bg-emerald-50 px-2" : ""
+            className={`flex items-center justify-between py-2.5 text-sm transition-all duration-300 ${
+              highlightId === c.id ? "-mx-2 rounded-lg px-2 animate-fade-in-scale" : ""
             }`}
+            style={{
+              borderColor: "var(--border)",
+              ...(highlightId === c.id ? { background: "rgba(16, 185, 129, 0.08)" } : {}),
+            }}
           >
             <div>
-              <p className="font-medium text-stone-800">{c.name}</p>
-              <p className="text-xs text-stone-400">
+              <p className="font-medium" style={{ color: "var(--foreground)" }}>{c.name}</p>
+              <p className="text-xs" style={{ color: "var(--primary-light)" }}>
                 {daysAgo(lastByCustomer.get(c.id))} · {c.points ?? 0} pts
               </p>
             </div>
-            <p className={`font-semibold ${c.balance > 0 ? "text-rose-600" : "text-emerald-600"}`}>{dh(c.balance)}</p>
+            <p className="font-semibold" style={{ color: c.balance > 0 ? "#dc2626" : "#059669" }}>
+              {dh(c.balance)}
+            </p>
           </li>
         ))}
       </ul>

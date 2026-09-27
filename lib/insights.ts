@@ -6,10 +6,14 @@ import type { Advice, Customer, Insights, LedgerState, ProductStat } from "./typ
 
 const DAY = 24 * 60 * 60 * 1000;
 
+function productKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 export function computeInsights(state: LedgerState, now = new Date()): Insights {
   const stats = new Map<string, ProductStat>();
   for (const p of state.products) {
-    stats.set(p.name_fr, {
+    stats.set(productKey(p.name_fr), {
       product: p.name_fr,
       quantity: 0,
       revenue: 0,
@@ -18,6 +22,8 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
       daysSinceLastSale: null,
       last7: 0,
       prev7: 0,
+      unit: p.unit,
+      stock: p.stock ?? 0,
     });
   }
 
@@ -40,7 +46,7 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
       }
       for (const it of tx.items) {
         const s =
-          stats.get(it.product) ??
+          stats.get(productKey(it.product)) ??
           ({
             product: it.product,
             quantity: 0,
@@ -50,6 +56,8 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
             daysSinceLastSale: null,
             last7: 0,
             prev7: 0,
+            unit: it.unit,
+            stock: 0,
           } as ProductStat);
         s.quantity += it.quantity;
         s.revenue += it.quantity * it.price;
@@ -57,23 +65,31 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
         if (!s.lastSoldAt || new Date(s.lastSoldAt).getTime() < t) s.lastSoldAt = tx.createdAt;
         if (age <= 7) s.last7 += it.quantity;
         else if (age <= 14) s.prev7 += it.quantity;
-        stats.set(it.product, s);
+        stats.set(productKey(s.product), s);
       }
     }
   }
 
-  const all = [...stats.values()].map((s) => ({
-    ...s,
-    revenue: Math.round(s.revenue),
-    daysSinceLastSale: s.lastSoldAt ? Math.floor((now.getTime() - new Date(s.lastSoldAt).getTime()) / DAY) : null,
-  }));
+  const all = [...stats.values()].map((s) => {
+    const remaining = Math.round((s.stock - s.quantity) * 100) / 100;
+    return {
+      ...s,
+      revenue: Math.round(s.revenue),
+      stock: remaining < 0 ? 0 : remaining,
+      daysSinceLastSale: s.lastSoldAt ? Math.floor((now.getTime() - new Date(s.lastSoldAt).getTime()) / DAY) : null,
+    };
+  });
 
   const sold = all.filter((s) => s.salesCount > 0);
   const top = [...sold].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  const unsold = all
+    .filter((s) => s.salesCount === 0 && s.stock > 0)
+    .sort((a, b) => b.stock - a.stock);
   const slow = sold
     .filter((s) => s.daysSinceLastSale !== null && s.daysSinceLastSale >= 10)
     .sort((a, b) => (b.daysSinceLastSale ?? 0) - (a.daysSinceLastSale ?? 0))
     .slice(0, 5);
+  const inventory = [...all].sort((a, b) => a.product.localeCompare(b.product, "fr"));
 
   const debtors = state.customers
     .filter((c) => c.balance > 0)
@@ -89,6 +105,8 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
   return {
     top,
     slow,
+    unsold,
+    inventory,
     debtors,
     totals: {
       revenue7: Math.round(revenue7),
@@ -96,7 +114,7 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
       outstanding: Math.round(outstanding),
       transactions: state.transactions.length,
     },
-    advice: rulesAdvice(top, slow, debtors),
+    advice: rulesAdvice(top, slow, unsold, debtors),
     adviceSource: "rules",
   };
 }
@@ -104,6 +122,7 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
 function rulesAdvice(
   top: ProductStat[],
   slow: ProductStat[],
+  unsold: ProductStat[],
   debtors: (Customer & { oldestCreditDays: number | null })[],
 ): Advice[] {
   const advice: Advice[] = [];
@@ -126,6 +145,23 @@ function rulesAdvice(
         s.daysSinceLastSale === null
           ? `${s.product} ne s'est jamais vendu : fais une promo ou arrête d'en commander.`
           : `${s.product} ne s'est pas vendu depuis ${s.daysSinceLastSale} jours : fais une promo ou arrête d'en commander.`,
+    });
+  }
+
+  const low = top.find((t) => t.quantity > 0 && t.stock <= Math.max(3, t.quantity));
+  if (low) {
+    advice.push({
+      darija: `${low.product} tba3 ${low.quantity} ${low.unit}, bqa ghir ${low.stock} f stock.`,
+      francais: `${low.product} : ${low.quantity} ${low.unit} déjà vendus, il en reste ${low.stock} en stock.`,
+    });
+  }
+
+  const sitting = unsold.slice(0, 2);
+  if (sitting.length) {
+    const names = sitting.map((s) => s.product).join(" w ");
+    advice.push({
+      darija: `${names} ma tba3ch, w l-stock mazal fihom. Dir promo wla ma tchrich merra okhra.`,
+      francais: `${sitting.map((s) => `${s.product} (${s.stock} ${s.unit})`).join(" et ")} ne se sont pas vendus : fais une promo ou n'en rachète pas.`,
     });
   }
 

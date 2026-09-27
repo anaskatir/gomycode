@@ -73,12 +73,14 @@ export function DemoAudio({ busy, onStart, onResult, onError }: Props) {
   if (phrases === null) return null;
 
   return (
-    <div className="mt-4 border-t border-stone-100 pt-4">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Écouter un exemple enregistré</p>
+    <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide" style={{ color: "var(--primary-light)" }}>
+        Écouter un exemple enregistré
+      </p>
       {phrases.length === 0 ? (
-        <p className="text-xs text-stone-400">
-          Aucun audio pour l&apos;instant. Dépose les fichiers dans <code className="rounded bg-stone-100 px-1">public/demo/</code> et
-          liste-les dans <code className="rounded bg-stone-100 px-1">phrases.json</code>.
+        <p className="text-xs" style={{ color: "var(--primary-light)" }}>
+          Aucun audio pour l&apos;instant. Dépose les fichiers dans <code className="rounded px-1" style={{ background: "rgba(124,58,237,0.06)" }}>public/demo/</code> et
+          liste-les dans <code className="rounded px-1" style={{ background: "rgba(124,58,237,0.06)" }}>phrases.json</code>.
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -88,11 +90,12 @@ export function DemoAudio({ busy, onStart, onResult, onError }: Props) {
               type="button"
               disabled={busy}
               onClick={() => void play(p)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-40 ${
-                playing === p.file
-                  ? "border-amber-500 bg-amber-100 text-amber-900"
-                  : "border-stone-200 bg-white text-stone-700 hover:border-amber-400 hover:bg-amber-50"
-              }`}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all duration-200 disabled:opacity-40 hover:scale-[1.03]"
+              style={{
+                background: playing === p.file ? "rgba(249, 115, 22, 0.12)" : "rgba(124, 58, 237, 0.06)",
+                border: `1px solid ${playing === p.file ? "rgba(249, 115, 22, 0.3)" : "rgba(124, 58, 237, 0.12)"}`,
+                color: playing === p.file ? "var(--accent-dark)" : "var(--primary-dark)",
+              }}
             >
               <PlayIcon playing={playing === p.file} />
               {p.label}
@@ -107,9 +110,9 @@ export function DemoAudio({ busy, onStart, onResult, onError }: Props) {
 function PlayIcon({ playing }: { playing: boolean }) {
   return playing ? (
     <span className="flex h-3 items-end gap-0.5">
-      <span className="h-2 w-0.5 animate-pulse bg-amber-600" />
-      <span className="h-3 w-0.5 animate-pulse bg-amber-600 [animation-delay:150ms]" />
-      <span className="h-1.5 w-0.5 animate-pulse bg-amber-600 [animation-delay:300ms]" />
+      <span className="h-2 w-0.5 animate-pulse rounded-full" style={{ background: "var(--accent)" }} />
+      <span className="h-3 w-0.5 animate-pulse rounded-full" style={{ background: "var(--accent)", animationDelay: "150ms" }} />
+      <span className="h-1.5 w-0.5 animate-pulse rounded-full" style={{ background: "var(--accent)", animationDelay: "300ms" }} />
     </span>
   ) : (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">

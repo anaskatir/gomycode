@@ -32,6 +32,8 @@ export type Product = {
   name_fr: string;
   unit: string;
   price: number;
+  /** Stock de départ du rayon. Le reste affiché = ce stock moins les ventes. */
+  stock?: number;
 };
 
 export type TransactionItem = { product: string; quantity: number; unit: string; price: number };
@@ -45,7 +47,7 @@ export type Transaction = {
   amount_paid: number;
   amount_credit: number;
   createdAt: string;
-  source: "seed" | "voice" | "text" | "mock";
+  source: "seed" | "voice" | "text" | "mock" | "remote";
   transcript?: string;
   confidence?: number;
   pointsEarned?: number;
@@ -72,6 +74,29 @@ export type TranscribeResponse = {
 
 export type Reminder = { message: string; waLink: string };
 
+export type OrderLocation = {
+  address: string;
+  lat: number | null;
+  lng: number | null;
+};
+
+export type RemoteOrder = {
+  id: string;
+  customerName: string;
+  phone: string;
+  items: TransactionItem[];
+  total: number;
+  status: "pending" | "accepted" | "refused";
+  createdAt: string;
+  location: OrderLocation;
+  /** Heure d'arrivée demandée, au format HH:MM. */
+  arriveAt: string;
+  /** Ce que le client paie à la livraison. */
+  amountPaid: number;
+  /** Ce qui reste à crédit, noté sur la Karna. */
+  amountCredit: number;
+};
+
 export type ConfirmResponse = {
   transaction: Transaction;
   customer: Customer | null;
@@ -88,6 +113,9 @@ export type ProductStat = {
   daysSinceLastSale: number | null;
   last7: number;
   prev7: number;
+  unit: string;
+  /** Quantité encore en rayon. */
+  stock: number;
 };
 
 export type Advice = { darija: string; francais: string };
@@ -95,6 +123,10 @@ export type Advice = { darija: string; francais: string };
 export type Insights = {
   top: ProductStat[];
   slow: ProductStat[];
+  /** Produits du rayon qui n'ont encore aucune vente. */
+  unsold: ProductStat[];
+  /** Tout le rayon : vendu et stock restant. */
+  inventory: ProductStat[];
   debtors: (Customer & { oldestCreditDays: number | null })[];
   totals: { revenue7: number; credit7: number; outstanding: number; transactions: number };
   advice: Advice[];
