@@ -24,7 +24,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Aucun audio reçu." }, { status: 400 });
       }
       const buffer = Buffer.from(await audio.arrayBuffer());
-      result = await extractFromAudio(buffer, audio.type || "audio/webm");
+      // "audio/webm;codecs=opus" → "audio/webm" : Gemini refuse les paramètres de codec
+      const mimeType = (audio.type || "audio/webm").split(";")[0].trim();
+      result = await extractFromAudio(buffer, mimeType);
     } else {
       const body = (await req.json().catch(() => null)) as { text?: string } | null;
       if (!body?.text?.trim()) {
@@ -37,7 +39,10 @@ export async function POST(req: Request) {
     const payload: TranscribeResponse = { ...result, match };
     return NextResponse.json(payload);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erreur inconnue";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("transcribe failed", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "L'IA n'a pas compris. Réessaie en français, lentement, ou tape la phrase." },
+      { status: 500 },
+    );
   }
 }

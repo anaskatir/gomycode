@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SoukVoice — la Karna qui écoute la darija",
+  title: "SoukVoice — la Karna qui écoute",
   description:
-    "Assistant vocal pour les épiciers de quartier au Maroc : ventes, crédit clients et conseils business, en darija.",
+    "Assistant vocal pour les épiciers de quartier au Maroc : ventes et crédit, en français, avec la darija en secours.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SoukVoice — Come Build with AI</title>
+    <style>
+      :root {
+        --bg: #faf9f7;
+        --ink: #1c1917;
+        --muted: #78716c;
+        --amber: #f59e0b;
+        --amber-dark: #b45309;
+        --line: #e7e5e4;
+        --card: #ffffff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        font-family: Georgia, "Times New Roman", serif;
+        background: var(--bg);
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .deck { height: 100%; }
+      .slide {
+        display: none;
+        height: 100%;
+        padding: 7vh 8vw;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .slide.active { display: flex; }
+      .kicker {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--amber-dark);
+        font-weight: 700;
+        margin-bottom: 18px;
+      }
+      h1 { font-size: clamp(42px, 6vw, 72px); line-height: 1.05; font-weight: 700; }
+      h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.1; font-weight: 700; max-width: 16ch; }
+      .lede { margin-top: 22px; font-size: 22px; line-height: 1.45; color: #44403c; max-width: 36ch; }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 36px;
+      }
+      .mark {
+        width: 44px; height: 44px; border-radius: 14px;
+        background: var(--amber); color: white;
+        display: grid; place-items: center;
+        font-family: Arial, sans-serif; font-weight: 900; font-size: 22px;
+      }
+      .brand small { display: block; color: var(--muted); font-family: Arial, sans-serif; font-size: 13px; }
+      ul { margin-top: 28px; list-style: none; max-width: 70ch; }
+      li { font-size: 22px; line-height: 1.4; padding: 10px 0 10px 28px; position: relative; }
+      li::before {
+        content: "";
+        position: absolute; left: 0; top: 20px;
+        width: 10px; height: 10px; border-radius: 99px; background: var(--amber);
+      }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 32px; max-width: 980px; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px 24px;
+      }
+      .card h3 { font-size: 20px; margin-bottom: 8px; }
+      .card p { font-family: Arial, sans-serif; color: #57534e; font-size: 15px; line-height: 1.45; }
+      .footer {
+        position: fixed; left: 8vw; right: 8vw; bottom: 28px;
+        display: flex; justify-content: space-between; align-items: center;
+        font-family: Arial, sans-serif; font-size: 12px; color: var(--muted);
+      }
+      .hint { opacity: 0.8; }
+      button.nav {
+        position: fixed; top: 50%; transform: translateY(-50%);
+        border: 0; width: 44px; height: 44px; border-radius: 99px;
+        background: white; border: 1px solid var(--line); cursor: pointer; font-size: 20px;
+      }
+      .prev { left: 18px; } .next { right: 18px; }
+      @media print {
+        body { overflow: visible; }
+        .slide { display: flex; height: 100vh; page-break-after: always; }
+        .footer, button.nav { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck" id="deck">
+      <section class="slide active" data-n="1">
+        <p class="kicker">Come Build with AI · Morocco · 27 September 2026</p>
+        <h1>The grocer still writes debts on paper.</h1>
+        <p class="lede">He forgets who owes what, mixes up two Karims, and has no idea what actually sells. He will not type while three customers wait.</p>
+      </section>
+
+      <section class="slide" data-n="2">
+        <div class="brand">
+          <div class="mark">S</div>
+          <div>SoukVoice<strong style="display:block;font-size:18px;font-weight:400;color:#78716c">The Karna that listens to Darija</strong></div>
+        </div>
+        <h2>He speaks. The ledger updates.</h2>
+        <ul>
+          <li>Voice or text in Darija becomes a structured sale.</li>
+          <li>The customer balance is updated, and a WhatsApp reminder is ready in one tap.</li>
+          <li>A business panel shows what to restock, what to stop buying, and whom to chase.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-n="3">
+        <p class="kicker">Demo · 90 seconds</p>
+        <h2>One journey. No guessing.</h2>
+        <ul>
+          <li>Play a recorded phrase: “Karim khda tlata kilo dial sokkar…”</li>
+          <li>Two customers are named Karim. The tool asks which one.</li>
+          <li>Confirm → new balance, WhatsApp message, Today list, and “Ton business”.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-n="4">
+        <p class="kicker">How the AI is actually used</p>
+        <h2>Darija in. Honest JSON out.</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>Gemini first</h3>
+            <p>Turns spoken or typed Darija into a sale: client, items, paid, credit, confidence.</p>
+          </div>
+          <div class="card">
+            <h3>Groq if Gemini is down</h3>
+            <p>Whisper for speech, then an open model for extraction. Same JSON contract.</p>
+          </div>
+          <div class="card">
+            <h3>It can refuse</h3>
+            <p>Duplicate first names stay separate. Low confidence is labelled “à confirmer”.</p>
+          </div>
+          <div class="card">
+            <h3>No Brev bonus claimed</h3>
+            <p>Judging is tool-neutral. We disclose the stack, the fallback, and what is live.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-n="5">
+        <p class="kicker">Tests and limits</p>
+        <h2>What we can stand behind.</h2>
+        <ul>
+          <li>Recorded Darija phrases and an invented 3-week ledger. No real customers.</li>
+          <li>Numbers in “Ton business” are calculated from the Karna, not guessed.</li>
+          <li>WhatsApp is a prefilled tap, not automatic sending.</li>
+          <li>Live microphone can fail in a noisy room. The video uses prepared audio.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-n="6">
+        <p class="kicker">Next</p>
+        <h2>Automatic reminders. Orders by voice.</h2>
+        <p class="lede">Then several shops, so a grocer can see what moves in his own street — still without typing.</p>
+        <p class="lede" style="font-size:18px;color:#78716c">github.com/anaskatir/gomycode</p>
+      </section>
+    </main>
+
+    <div class="footer">
+      <span>SoukVoice · Come Build with AI</span>
+      <span class="hint"><span id="pos">1</span> / 6 · ← → to navigate · Ctrl+P to save as PDF</span>
+    </div>
+    <button class="nav prev" type="button" aria-label="Previous">←</button>
+    <button class="nav next" type="button" aria-label="Next">→</button>
+
+    <script>
+      const slides = [...document.querySelectorAll(".slide")];
+      let i = 0;
+      function show(n) {
+        i = (n + slides.length) % slides.length;
+        slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+        document.getElementById("pos").textContent = String(i + 1);
+      }
+      document.querySelector(".next").onclick = () => show(i + 1);
+      document.querySelector(".prev").onclick = () => show(i - 1);
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); show(i + 1); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); show(i - 1); }
+      });
+    </script>
+  </body>
+</html>

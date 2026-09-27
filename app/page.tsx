@@ -6,6 +6,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { Ledger } from "@/components/Ledger";
 import { Recorder } from "@/components/Recorder";
 import { SourceBadge } from "@/components/SourceBadge";
+import { TodaySales } from "@/components/TodaySales";
 import { TransactionCard } from "@/components/TransactionCard";
 import type { ConfirmResponse, Insights, LedgerState, Provider, TranscribeResponse } from "@/lib/types";
 
@@ -101,7 +102,7 @@ export default function Home() {
           <div>
             <h1 className="text-xl font-bold tracking-tight text-stone-900">SoukVoice</h1>
             <p className="text-sm text-stone-500">
-              {ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "La Karna qui écoute la darija"}
+              {ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "La Karna, en français ou en darija"}
             </p>
           </div>
         </div>
@@ -138,6 +139,7 @@ export default function Home() {
         </div>
 
         <div className="space-y-5">
+          {ledger && <TodaySales state={ledger} highlightId={result?.transaction.id ?? null} />}
           {ledger && <Ledger state={ledger} highlightId={result?.customer?.id ?? null} />}
           <InsightsPanel insights={insights} />
         </div>

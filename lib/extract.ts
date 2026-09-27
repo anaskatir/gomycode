@@ -1,16 +1,37 @@
 // Adaptateur entre les routes API et l'IA.
 //
-// AUJOURD'HUI : mode démo (mock), pour que l'écran marche sans clé.
-// PERSONNE 1 : quand lib/ai.ts est prêt, remplace les deux lignes marquées ci-dessous
-// par `import { extractFromAudio, extractFromText } from "./ai";` et supprime le mock.
+// - Une clé GEMINI_API_KEY ou GROQ_API_KEY est présente → vraie IA (lib/ai.ts, personne 1).
+// - Aucune clé → mode démo : réponses préparées, badge « Exemple de secours ».
 // Le contrat (Extraction + provider) est dans lib/types.ts.
 
+import * as ai from "./ai";
 import { SAMPLE_PHRASES } from "./samples";
 import type { Extraction, Provider } from "./types";
 
 export type ExtractResult = { extraction: Extraction; provider: Provider };
 
-// ---- MOCK (à remplacer) -----------------------------------------------------
+function hasAiKey(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY);
+}
+
+export async function extractFromText(text: string): Promise<ExtractResult> {
+  if (hasAiKey()) return ai.extractFromText(text);
+  return { extraction: pickCanned(text), provider: "mock" };
+}
+
+export async function extractFromAudio(audio: Buffer, mimeType: string): Promise<ExtractResult> {
+  if (hasAiKey()) return ai.extractFromAudio(audio, mimeType);
+  const e = pickCanned(SAMPLE_PHRASES[0].text);
+  return {
+    extraction: {
+      ...e,
+      uncertainties: ["Mode démo : l'audio n'a pas été analysé, aucune clé IA n'est configurée."],
+    },
+    provider: "mock",
+  };
+}
+
+// ---- Mode démo -----------------------------------------------------------------
 
 const CANNED: Record<string, Extraction> = {
   karim: {
@@ -90,25 +111,6 @@ function pickCanned(text: string): Extraction {
     amount_paid: null,
     amount_credit: null,
     confidence: 0.3,
-    uncertainties: ["Mode démo : phrase non reconnue par le mock. L'IA réelle n'est pas branchée."],
-  };
-}
-
-export async function extractFromText(text: string): Promise<ExtractResult> {
-  // PERSONNE 1 : remplacer par l'appel réel.
-  return { extraction: pickCanned(text), provider: "mock" };
-}
-
-export async function extractFromAudio(audio: Buffer, mimeType: string): Promise<ExtractResult> {
-  // PERSONNE 1 : remplacer par l'appel réel.
-  void audio;
-  void mimeType;
-  const e = pickCanned(SAMPLE_PHRASES[0].text);
-  return {
-    extraction: {
-      ...e,
-      uncertainties: ["Mode démo : l'audio n'a pas été analysé, l'IA réelle n'est pas branchée."],
-    },
-    provider: "mock",
+    uncertainties: ["Mode démo : phrase non reconnue. Configure une clé IA dans .env.local pour l'analyse réelle."],
   };
 }

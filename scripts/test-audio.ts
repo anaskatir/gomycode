@@ -14,8 +14,8 @@ async function run() {
     
     console.log("\nRésultat :");
     console.log(JSON.stringify(result, null, 2));
-  } catch (e: any) {
-    if (e.code === 'ENOENT') {
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') {
       console.error(`\nErreur : Le fichier ${filePath} n'existe pas.`);
       console.error("Mets un fichier audio en darija nommé 'test.m4a' à la racine du projet (gomycode) pour tester !");
     } else {

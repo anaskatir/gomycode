@@ -3,8 +3,10 @@ import { systemPrompt } from "./prompts";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+const GROQ_CHAT_MODEL = "openai/gpt-oss-20b";
 
-type GeminiInput = 
+type GeminiInput =
   | { type: "text"; text: string }
   | { type: "audio"; buffer: Buffer; mimeType: string };
 
@@ -13,7 +15,7 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
     throw new Error("GEMINI_API_KEY is not set");
   }
 
-  const parts: any[] = [];
+  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
   if (input.type === "audio") {
     parts.push({
@@ -27,56 +29,57 @@ async function callGemini(input: GeminiInput, errorFeedback?: string): Promise<s
       : `Écoute cet audio et extrais les informations de la transaction en JSON.`;
     parts.push({ text: promptText });
   } else {
-    const promptText = errorFeedback 
+    const promptText = errorFeedback
       ? `Voici la phrase : "${input.text}"\n\nAttention, ta précédente réponse était invalide : ${errorFeedback}. Corrige-la et renvoie un JSON valide.`
       : `Voici la phrase : "${input.text}"`;
     parts.push({ text: promptText });
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        },
-        contents: [{
-          parts: parts
-        }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
+  const body = JSON.stringify({
+    systemInstruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents: [{ parts }],
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  let lastError = "Gemini unavailable";
+  for (const model of GEMINI_MODELS) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body },
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content) return content;
+      lastError = `Gemini ${model}: empty response`;
+      continue;
     }
-  );
-
-  if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+    lastError = `Gemini API error: ${response.status} ${errorText}`;
+    if (response.status !== 404 && response.status !== 503) throw new Error(lastError);
   }
+  throw new Error(lastError);
 
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!content) {
-    throw new Error("Invalid response structure from Gemini");
-  }
-
-  return content;
 }
 
 async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<string> {
   if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not set");
-  
+
   const formData = new FormData();
-  const blob = new Blob([buffer as any], { type: mimeType });
+  const blob = new Blob([buffer], { type: mimeType });
   const ext = mimeType.split('/')[1] || "m4a";
   formData.append("file", blob, `audio.${ext}`);
   formData.append("model", "whisper-large-v3");
+  formData.append("temperature", "0");
+  // Français d'abord : le micro le transcrit bien. La darija reste comprise en secours.
+  formData.append(
+    "prompt",
+    "Karim a pris 3 kilos de sucre, il a payé 100 dirhams, il reste 200. Fatima a remboursé 50 dirhams. Youssef a pris du lait et un yaourt, il a payé 5 dirhams, il reste 20. Karim khda tlata kilo dial sokkar, khallas mia.",
+  );
 
   const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
     method: "POST",
@@ -84,7 +87,7 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
       "Authorization": `Bearer ${GROQ_API_KEY}`
     },
     // Le FormData natif dans Node set automatiquement le Content-Type avec le boundary
-    body: formData as any
+    body: formData as unknown as BodyInit
   });
 
   if (!response.ok) {
@@ -110,7 +113,7 @@ async function callGroqLlama(text: string, errorFeedback?: string): Promise<stri
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.1-70b-versatile",
+      model: GROQ_CHAT_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: promptText }
@@ -126,9 +129,9 @@ async function callGroqLlama(text: string, errorFeedback?: string): Promise<stri
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
-  
+
   if (!content) throw new Error("Invalid response structure from Groq");
-  
+
   return content;
 }
 
@@ -144,7 +147,7 @@ async function fallbackGroq(input: GeminiInput): Promise<{ extraction: Extractio
     const rawResponse = await callGroqLlama(textToExtract);
     const json = JSON.parse(rawResponse);
     return { extraction: extractionSchema.parse(json), provider: "groq" };
-  } catch (e: any) {
+  } catch (e: unknown) {
     const errorMessage = e instanceof Error ? e.message : String(e);
     const retryResponse = await callGroqLlama(textToExtract, errorMessage);
     const json = JSON.parse(retryResponse);
@@ -159,7 +162,7 @@ export async function extractFromText(text: string): Promise<{ extraction: Extra
       const json = JSON.parse(rawResponse);
       const extraction = extractionSchema.parse(json);
       return { extraction, provider: "gemini" };
-    } catch (e: any) {
+    } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const retryResponse = await callGemini({ type: "text", text }, errorMessage);
       const json = JSON.parse(retryResponse);
@@ -179,7 +182,7 @@ export async function extractFromAudio(audio: Buffer, mimeType: string): Promise
       const json = JSON.parse(rawResponse);
       const extraction = extractionSchema.parse(json);
       return { extraction, provider: "gemini" };
-    } catch (e: any) {
+    } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const retryResponse = await callGemini({ type: "audio", buffer: audio, mimeType }, errorMessage);
       const json = JSON.parse(retryResponse);

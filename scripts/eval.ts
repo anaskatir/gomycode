@@ -17,13 +17,13 @@ async function runEval() {
   try {
     const fileContent = await fs.readFile(expectedPath, "utf8");
     expectedData = JSON.parse(fileContent);
-  } catch (error) {
+  } catch {
     console.error(`Erreur : Impossible de lire ${expectedPath}. Assure-toi que les fichiers existent.`);
     return;
   }
 
   const results = [];
-  let totalScore = {
+  const totalScore = {
     intent: 0,
     customer_name: 0,
     amount_paid: 0,
@@ -41,7 +41,7 @@ async function runEval() {
     let audioBuffer;
     try {
       audioBuffer = await fs.readFile(audioPath);
-    } catch (err) {
+    } catch {
       console.warn(`⚠️  Fichier ignoré (introuvable) : ${file}`);
       continue;
     }
@@ -64,7 +64,7 @@ async function runEval() {
         } else {
           for (let i = 0; i < expected.items.length; i++) {
             const expItem = expected.items[i];
-            const extItem = extraction.items.find((it: any) => normalize(it.product) === normalize(expItem.product));
+            const extItem = extraction.items.find((it: { product: string, quantity: number }) => normalize(it.product) === normalize(expItem.product));
             if (!extItem || extItem.quantity !== expItem.quantity) {
               itemsOk = false;
               break;
@@ -92,8 +92,9 @@ async function runEval() {
       if (creditOk) totalScore.amount_credit++;
       if (itemsOk) totalScore.items++;
 
-    } catch (e: any) {
-      console.error(`❌ Erreur sur ${file} :`, e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`❌ Erreur sur ${file} :`, msg);
     }
   }
 
