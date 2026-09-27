@@ -31,6 +31,10 @@ export function BalanceReminder({ result, onDismiss }: { result: ConfirmResponse
         <div className="text-right">
           <p className="text-xs text-stone-500">Nouveau solde</p>
           <p className={`text-2xl font-bold ${owes ? "text-rose-600" : "text-emerald-600"}`}>{dh(customer.balance)}</p>
+          <p className="text-xs font-medium text-amber-700">
+            {customer.points ?? 0} pts
+            {transaction.pointsEarned ? ` · +${transaction.pointsEarned}` : ""}
+          </p>
         </div>
       </header>
 

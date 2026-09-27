@@ -36,6 +36,8 @@ yarn-error.log*
 
 # état courant de la Karna (généré à l'exécution)
 /data/ledger.json
+/data/soukvoice.db
+/data/soukvoice.db-*
 
 # audios de test : gros fichiers, partagés hors git
 /data/test/phrases/*.m4a

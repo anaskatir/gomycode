@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { normalize } from "@/lib/matchCustomer";
+import { pointsForPurchase } from "@/lib/points";
 import { buildReminder } from "@/lib/reminder";
 import { getState, saveState } from "@/lib/store";
 import type { ConfirmResponse, Customer, Extraction, Transaction, TransactionItem } from "@/lib/types";
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
       name: body.newCustomerName.trim(),
       phone: `2126000000${String(state.customers.length + 1).padStart(2, "0")}`,
       balance: 0,
+      points: 0,
     };
     state.customers.push(customer);
   }
@@ -79,8 +81,12 @@ export async function POST(req: Request) {
     credit = extraction.amount_credit ?? Math.max(0, round(total - paid));
   }
 
-  // 4. Mise à jour du solde
-  if (customer && extraction.intent === "sale") customer.balance = round(customer.balance + credit);
+  // 4. Solde + points fidélité (1 point / 10 dh d'achat)
+  const pointsEarned = extraction.intent === "sale" ? pointsForPurchase(total) : 0;
+  if (customer && extraction.intent === "sale") {
+    customer.balance = round(customer.balance + credit);
+    customer.points = (customer.points ?? 0) + pointsEarned;
+  }
   if (customer && extraction.intent === "payment") customer.balance = round(customer.balance - paid);
 
   const transaction: Transaction = {
@@ -95,6 +101,7 @@ export async function POST(req: Request) {
     source: body.source ?? "text",
     transcript: extraction.transcript,
     confidence: extraction.confidence,
+    pointsEarned,
   };
   state.transactions.push(transaction);
   saveState(state);

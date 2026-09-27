@@ -16,6 +16,9 @@ export function buildReminder(customer: Customer, tx: Transaction, shopName: str
   }
 
   message += balance > 0 ? ` Il te reste ${balance} dh.` : " Tu ne dois plus rien.";
+  if (tx.pointsEarned && tx.pointsEarned > 0) {
+    message += ` +${tx.pointsEarned} points (total ${customer.points}).`;
+  }
   message += ` Merci, ${shopName}.`;
 
   return {

@@ -24,7 +24,7 @@ export type Extraction = {
   uncertainties: string[];
 };
 
-export type Customer = { id: string; name: string; phone: string; balance: number };
+export type Customer = { id: string; name: string; phone: string; balance: number; points: number };
 
 export type Product = {
   id: string;
@@ -48,6 +48,7 @@ export type Transaction = {
   source: "seed" | "voice" | "text" | "mock";
   transcript?: string;
   confidence?: number;
+  pointsEarned?: number;
 };
 
 /** Structure exacte de data/seed.json (personne 3). */

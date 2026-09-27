@@ -68,10 +68,11 @@ export function computeInsights(state: LedgerState, now = new Date()): Insights 
     daysSinceLastSale: s.lastSoldAt ? Math.floor((now.getTime() - new Date(s.lastSoldAt).getTime()) / DAY) : null,
   }));
 
-  const top = [...all].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-  const slow = all
-    .filter((s) => s.daysSinceLastSale === null || s.daysSinceLastSale >= 10)
-    .sort((a, b) => (b.daysSinceLastSale ?? 999) - (a.daysSinceLastSale ?? 999))
+  const sold = all.filter((s) => s.salesCount > 0);
+  const top = [...sold].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  const slow = sold
+    .filter((s) => s.daysSinceLastSale !== null && s.daysSinceLastSale >= 10)
+    .sort((a, b) => (b.daysSinceLastSale ?? 0) - (a.daysSinceLastSale ?? 0))
     .slice(0, 5);
 
   const debtors = state.customers
