@@ -73,7 +73,7 @@ async function callGroqTranscription(buffer: Buffer, mimeType: string): Promise<
   if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not set");
   
   const formData = new FormData();
-  const blob = new Blob([buffer], { type: mimeType });
+  const blob = new Blob([buffer as any], { type: mimeType });
   const ext = mimeType.split('/')[1] || "m4a";
   formData.append("file", blob, `audio.${ext}`);
   formData.append("model", "whisper-large-v3");
