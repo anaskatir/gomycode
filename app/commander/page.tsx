@@ -205,9 +205,10 @@ export default function CommanderPage() {
 
   if (order && catalog) {
     return (
-      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
-        <p className="text-sm text-stone-500">{catalog.shop.name}</p>
-        <h1 className="mt-1 text-2xl font-bold text-stone-900">Commande envoyée</h1>
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
+        <a href="/" className="text-sm text-stone-800">Hanouti</a>
+        <p className="mt-6 text-xs uppercase tracking-[0.16em] text-stone-500">{catalog.shop.name}</p>
+        <h1 className="mt-2 text-4xl text-stone-900">Commande envoyée</h1>
         <p className="mt-3 text-stone-700">
           {order.customerName}, le hanout prépare ton panier pour {order.location.address}
           {order.arriveAt ? ` à ${formatHour(order.arriveAt)}` : ""}. Tu paies {dh(order.amountPaid)} maintenant.
@@ -245,9 +246,10 @@ export default function CommanderPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
-      <p className="text-sm text-stone-500">{catalog ? `${catalog.shop.name} · ${catalog.shop.city}` : "Hanout"}</p>
-      <h1 className="mt-1 text-2xl font-bold text-stone-900">Commander sans venir</h1>
+    <main className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
+      <a href="/" className="text-sm text-stone-800">Hanouti</a>
+      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-stone-500">{catalog ? `${catalog.shop.name} · ${catalog.shop.city}` : "Hanout"}</p>
+      <h1 className="mt-2 text-4xl text-stone-900">Commander sans venir</h1>
 
       {error && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>}
 
@@ -403,8 +405,7 @@ export default function CommanderPage() {
               type="button"
               disabled={busy || !name.trim() || !address.trim() || !arriveAt || !payReady || lines.length === 0}
               onClick={submit}
-              className="w-full rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-40"
-              style={{ background: "linear-gradient(135deg, var(--primary), var(--primary-dark))" }}
+              className="hero-gold w-full justify-center py-3 text-sm disabled:opacity-40"
             >
               {busy ? "Envoi…" : `Envoyer la commande · ${dh(total)}`}
             </button>

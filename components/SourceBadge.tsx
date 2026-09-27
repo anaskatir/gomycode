@@ -7,9 +7,9 @@ export function SourceBadge({ provider }: { provider: Provider | null }) {
       <span
         className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
         style={{
-          background: "rgba(124, 58, 237, 0.06)",
-          border: "1px solid rgba(124, 58, 237, 0.12)",
-          color: "var(--primary-light)",
+          background: "rgba(255, 255, 255, 0.08)",
+          border: "1px solid rgba(247, 243, 234, 0.28)",
+          color: "inherit",
         }}
       >
         <span

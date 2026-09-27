@@ -427,3 +427,71 @@ export function acceptOrder(id: string): { order: RemoteOrder; customer: Custome
   open().prepare("UPDATE orders SET status = 'accepted' WHERE id = ?").run(id);
   return { order: { ...order, status: "accepted" }, customer };
 }
+
+function soldQuantity(state: LedgerState, product: Product): number {
+  const key = product.name_fr.trim().toLowerCase();
+  let sold = 0;
+  for (const tx of state.transactions) {
+    if (tx.intent !== "sale") continue;
+    for (const item of tx.items) {
+      if (item.product.trim().toLowerCase() === key) sold += item.quantity;
+    }
+  }
+  return sold;
+}
+
+function writeCatalog(products: Product[]) {
+  const lines = products.map((p) => {
+    const compact = JSON.stringify({
+      id: p.id,
+      name_darija: p.name_darija,
+      name_fr: p.name_fr,
+      unit: p.unit,
+      price: p.price,
+      stock: p.stock ?? 0,
+    });
+    const spaced = compact
+      .split('{"').join('{ "')
+      .split('"}').join('" }')
+      .split('":').join('": ')
+      .split(',"').join(', "');
+    return `  ${spaced}`;
+  });
+  fs.writeFileSync(CATALOG_FILE, `[\n${lines.join(",\n")}\n]\n`);
+}
+
+/** price = prix du rayon. stock = ce qu'il reste en rayon, pas le stock d'ouverture. */
+export function updateProduct(id: string, fields: { price?: number; stock?: number }): LedgerState {
+  const state = getState();
+  const product = state.products.find((p) => p.id === id);
+  if (!product) throw new Error("Produit introuvable.");
+  if (fields.price !== undefined) {
+    if (!Number.isFinite(fields.price) || fields.price < 0) throw new Error("Prix invalide.");
+    product.price = Math.round(fields.price * 100) / 100;
+  }
+  if (fields.stock !== undefined) {
+    if (!Number.isFinite(fields.stock) || fields.stock < 0) throw new Error("Stock invalide.");
+    const opening = fields.stock + soldQuantity(state, product);
+    product.stock = Math.round(opening * 100) / 100;
+  }
+  open().prepare("UPDATE products SET price = ?, stock = ? WHERE id = ?").run(product.price, product.stock ?? 0, id);
+  writeCatalog(state.products);
+  cache = state;
+  return state;
+}
+
+/** Retire le client de la Karna. Les ventes restent dans le chiffre, sans son nom. */
+export function deleteCustomer(id: string): LedgerState {
+  const state = getState();
+  const customer = state.customers.find((c) => c.id === id);
+  if (!customer) throw new Error("Client introuvable.");
+  state.customers = state.customers.filter((c) => c.id !== id);
+  for (const tx of state.transactions) {
+    if (tx.customerId === id) tx.customerId = null;
+  }
+  const database = open();
+  database.prepare("DELETE FROM customers WHERE id = ?").run(id);
+  database.prepare("UPDATE transactions SET customer_id = NULL WHERE customer_id = ?").run(id);
+  cache = state;
+  return state;
+}

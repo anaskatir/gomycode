@@ -1,12 +1,12 @@
 # Hanouti
 
-La Karna qui écoute. Un épicier de quartier au Maroc parle, la vente est enregistrée, le crédit du client est mis à jour, et un message WhatsApp avec le nouveau solde est prêt. Le client peut aussi commander sans venir : un quiz propose un panier, il indique où et à quelle heure il passe, et combien il paie maintenant. Le reste part en dette.
+The ledger that listens. A neighborhood grocer in Morocco speaks, the sale is saved, the customer's credit is updated, and a WhatsApp message with the new balance is ready. A customer can also order without coming in: a short quiz suggests a basket, they say where and when they will arrive, and how much they pay now. The rest is recorded as debt.
 
-Projet du hackathon **Come Build with AI**, 27 septembre 2026, Maroc.
+Project for the **Come Build with AI** hackathon, 27 September 2026, Morocco.
 
-## Lancer
+## Run
 
-Il faut **Node.js 24** (`node:sqlite` garde les clients). Puis :
+**Node.js 24** is required (`node:sqlite` stores the customers). Then:
 
 ```bash
 npm install
@@ -14,65 +14,65 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Sur macOS ou Linux, remplace `copy` par `cp .env.example .env.local`.
+On macOS or Linux, use `cp .env.example .env.local` instead of `copy`.
 
-Ouvre http://localhost:3000. Colle `GEMINI_API_KEY` et `GROQ_API_KEY` dans `.env.local` (voir `.env.example`). Ne commite jamais ce fichier.
+Open http://localhost:3000. Paste `GEMINI_API_KEY` and `GROQ_API_KEY` into `.env.local` (see `.env.example`). Never commit that file.
 
-Sans clé, l'écran marche en **mode démo** (badge « Exemple de secours ») : les boutons d'exemples renvoient des résultats préparés, l'audio n'est pas analysé.
+Without a key, the screen runs in **demo mode** (badge "Exemple de secours"): prepared results are returned, and audio is not analyzed.
 
-## Les deux écrans
+## The two screens
 
-- **http://localhost:3000** ? l'épicier. Micro, texte, Karna, commandes en attente, ventes du jour, stock, conseil.
-- **http://localhost:3000/commander** ? le client. Bouton **Vue client** en haut de l'écran épicier. Quiz, panier, adresse, heure d'arrivée, paiement maintenant ou plus tard.
+- **http://localhost:3000** ? the grocer. Microphone, text, ledger, incoming orders, today's sales, stock, and advice.
+- **http://localhost:3000/commander** ? the customer. The **Vue client** button at the top of the grocer screen opens it. Quiz, basket, address, arrival time, pay now or later.
 
-Le bouton **La Karna** ouvre le tableau de l'épicier sans passer par le micro. **Réinitialiser la démo** efface les clients et les commandes de cette machine.
+**La Karna** opens the grocer's board without using the microphone. **Réinitialiser la démo** clears the customers and orders on this machine.
 
-## Données
+## Data
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `data/catalog.json` | Prix et stock d'ouverture du rayon (42 produits) |
-| `data/seed.json` | Produits de départ, lu si la base est vide |
-| `data/soukvoice.db` | Clients, ventes, points, commandes. Créé au lancement, ignoré par git |
-| `data/test/` | 20 phrases pour mesurer la justesse de l'extraction |
+| `data/catalog.json` | Shelf prices and opening stock (42 products) |
+| `data/seed.json` | Starting products, read when the database is empty |
+| `data/soukvoice.db` | Customers, sales, points, orders. Created on launch, ignored by git |
+| `data/test/` | 20 phrases used to measure extraction accuracy |
 
-Les clients vus à l'écran sont ceux enregistrés sur la machine, pas des noms d'exemple du dépôt. Un point est donné pour 10 dh d'achat. Le stock affiché est le stock d'ouverture moins les quantités vendues.
+The customers on screen are the ones saved on this machine, not example names from the repo. One point is given for every 10 dh of purchases. The stock shown is opening stock minus quantities sold.
 
-## L'IA
+## The model
 
-`lib/ai.ts` envoie l'audio ou le texte à Gemini (`gemini-3.8-flash`, puis `gemini-2.5-flash`, puis `gemini-2.0-flash`) et bascule sur Groq (Whisper large v3 en français, puis `openai/gpt-oss-20b`) si Gemini échoue. La réponse est validée par `lib/schema.ts` (Zod). La consigne est dans `lib/prompts.ts` : français en principal, darija en secours.
+`lib/ai.ts` sends audio or text to Gemini (`gemini-3.8-flash`, then `gemini-2.5-flash`, then `gemini-2.0-flash`) and falls back to Groq (Whisper large v3 in French, then `openai/gpt-oss-20b`) if Gemini fails. The answer is checked by `lib/schema.ts` (Zod). The instruction is in `lib/prompts.ts`: French first, Darija as a fallback.
 
-`lib/extract.ts` choisit tout seul : une clé dans `.env.local` donne le badge « IA en direct » ; aucune clé donne le mode démo.
+`lib/extract.ts` chooses on its own: a key in `.env.local` shows the "IA en direct" badge; no key means demo mode.
 
-Le panier du quiz (`lib/basket.ts`) et le conseil de « Ton business » (`lib/insights.ts`) sont des règles, pas un appel à l'IA.
+The quiz basket (`lib/basket.ts`) and the "Ton business" advice (`lib/insights.ts`) are rules, not a model call.
 
-Mesure de justesse sur les 20 phrases test :
+Accuracy check on the 20 test phrases:
 
 ```bash
 npm run eval
 ```
 
-## Routes API
+## API routes
 
-| Route | Rôle |
+| Route | Role |
 |---|---|
-| `POST /api/transcribe` | Audio ou texte. Extrait la vente. Ne modifie pas la Karna. |
-| `POST /api/ledger` | Enregistre la vente confirmée, met à jour le solde, renvoie le message WhatsApp |
-| `GET /api/ledger` | Clients, produits, transactions |
-| `POST /api/ledger/reset` | Vide la démo et repart du catalogue |
-| `GET /api/insights` | Ce qui se vend, ce qui ne se vend pas, stock, conseil |
-| `GET /api/catalog` | Prix du rayon pour la page client |
-| `GET /api/orders` | Commandes sans venir |
-| `POST /api/orders` | Le client envoie son panier, l'adresse, l'heure et le montant payé |
-| `POST /api/orders/:id` | L'épicier accepte ou refuse. Accepter crée la vente et la dette. |
+| `POST /api/transcribe` | Audio or text. Extracts the sale. Does not change the ledger. |
+| `POST /api/ledger` | Saves the confirmed sale, updates the balance, returns the WhatsApp message |
+| `GET /api/ledger` | Customers, products, transactions |
+| `POST /api/ledger/reset` | Clears the demo and reloads the catalog |
+| `GET /api/insights` | What sells, what does not, stock, advice |
+| `GET /api/catalog` | Shelf prices for the customer page |
+| `GET /api/orders` | Orders placed without coming in |
+| `POST /api/orders` | The customer sends the basket, address, time, and amount paid |
+| `POST /api/orders/:id` | The grocer accepts or refuses. Accepting creates the sale and the debt. |
 
-## Honnêteté
+## Honesty
 
-- Le badge en haut dit d'où vient le résultat : IA en direct (Gemini ou Groq) ou exemple de secours.
-- Les chiffres de « Ton business » sont calculés depuis les ventes. Le conseil est marqué comme des règles simples.
-- Le total d'une vente sans montant dicté est calculé avec le prix du rayon. Ce qui n'est pas payé tout de suite part à crédit.
-- L'envoi WhatsApp se fait par un lien `wa.me` (un tap). L'envoi automatique demande l'API Business.
+- The badge at the top says where the result came from: live model (Gemini or Groq) or the fallback example.
+- The "Ton business" numbers are calculated from sales. The advice is labeled as simple rules.
+- A sale with no spoken amount is priced from the shelf. Whatever is not paid now becomes credit.
+- WhatsApp is sent through a `wa.me` link (one tap). Automatic sending needs the Business API.
 
-## Suite prévue
+## Next
 
-Envoi automatique des rappels, commandes fournisseur dictées, plusieurs magasins.
+Automatic reminders, dictated supplier orders, several shops.

@@ -73,14 +73,14 @@ export function DemoAudio({ busy, onStart, onResult, onError }: Props) {
   if (phrases === null) return null;
 
   return (
-    <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide" style={{ color: "var(--primary-light)" }}>
+    <div className="demo-audio mt-4 pt-4">
+      <p className="demo-audio-label mb-2 text-xs font-medium uppercase tracking-wide">
         Écouter un exemple enregistré
       </p>
       {phrases.length === 0 ? (
-        <p className="text-xs" style={{ color: "var(--primary-light)" }}>
-          Aucun audio pour l&apos;instant. Dépose les fichiers dans <code className="rounded px-1" style={{ background: "rgba(124,58,237,0.06)" }}>public/demo/</code> et
-          liste-les dans <code className="rounded px-1" style={{ background: "rgba(124,58,237,0.06)" }}>phrases.json</code>.
+        <p className="demo-audio-label text-xs">
+          Aucun audio pour l&apos;instant. Dépose les fichiers dans <code className="rounded px-1">public/demo/</code> et
+          liste-les dans <code className="rounded px-1">phrases.json</code>.
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -90,12 +90,7 @@ export function DemoAudio({ busy, onStart, onResult, onError }: Props) {
               type="button"
               disabled={busy}
               onClick={() => void play(p)}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all duration-200 disabled:opacity-40 hover:scale-[1.03]"
-              style={{
-                background: playing === p.file ? "rgba(249, 115, 22, 0.12)" : "rgba(124, 58, 237, 0.06)",
-                border: `1px solid ${playing === p.file ? "rgba(249, 115, 22, 0.3)" : "rgba(124, 58, 237, 0.12)"}`,
-                color: playing === p.file ? "var(--accent-dark)" : "var(--primary-dark)",
-              }}
+              className={`demo-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all duration-200 disabled:opacity-40 ${playing === p.file ? "demo-chip-on" : ""}`}
             >
               <PlayIcon playing={playing === p.file} />
               {p.label}

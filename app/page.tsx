@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { SAMPLE_PHRASES } from "@/lib/samples";
 import { BalanceReminder } from "@/components/BalanceReminder";
 import { Catalog } from "@/components/Catalog";
 import { InsightsPanel } from "@/components/InsightsPanel";
@@ -11,7 +10,7 @@ import { RemoteOrders } from "@/components/RemoteOrders";
 import { SourceBadge } from "@/components/SourceBadge";
 import { TodaySales } from "@/components/TodaySales";
 import { TransactionCard } from "@/components/TransactionCard";
-import { DemoAudio } from "@/components/DemoAudio";
+import { dh } from "@/lib/format";
 import type { ConfirmResponse, Insights, LedgerState, Provider, TranscribeResponse } from "@/lib/types";
 
 type Phase = "idle" | "recording" | "analyzing" | "results";
@@ -28,13 +27,17 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
   const [text, setText] = useState("");
-  const [analyzerData, setAnalyzerData] = useState<number[]>(new Array(32).fill(0.1));
+  const [listening, setListening] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const analyzerRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
+  const barsRef = useRef<Array<HTMLDivElement | null>>([]);
+  const freqRef = useRef<Uint8Array | null>(null);
+  const armingRef = useRef(false);
+  const sessionRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -72,16 +75,20 @@ export default function Home() {
   }, []);
 
   function updateAnalyzer() {
-    if (!analyzerRef.current) return;
-    const data = new Uint8Array(analyzerRef.current.frequencyBinCount);
-    analyzerRef.current.getByteFrequencyData(data);
-    const bars: number[] = [];
-    const step = Math.floor(data.length / 32);
-    for (let i = 0; i < 32; i++) {
-      const val = data[i * step] / 255;
-      bars.push(Math.max(0.05, val));
+    const analyzer = analyzerRef.current;
+    if (!analyzer) return;
+    if (!freqRef.current || freqRef.current.length !== analyzer.frequencyBinCount) {
+      freqRef.current = new Uint8Array(analyzer.frequencyBinCount);
     }
-    setAnalyzerData(bars);
+    const data = freqRef.current;
+    analyzer.getByteFrequencyData(data);
+    const step = Math.max(1, Math.floor(data.length / barsRef.current.length));
+    for (let i = 0; i < barsRef.current.length; i++) {
+      const el = barsRef.current[i];
+      if (!el) continue;
+      const val = (data[i * step] ?? 0) / 255;
+      el.style.transform = `scaleY(${Math.max(0.08, val)})`;
+    }
     animationRef.current = requestAnimationFrame(updateAnalyzer);
   }
 
@@ -128,20 +135,31 @@ export default function Home() {
   }
 
   async function startRecording() {
+    if (armingRef.current || recorderRef.current) return;
     if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") {
       setError("Micro non disponible. Tape la phrase ci-dessous.");
       return;
     }
+    armingRef.current = true;
+    const session = ++sessionRef.current;
+    setError(null);
+    setSeconds(0);
+    setListening(false);
+    setPhase("recording");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (session !== sessionRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
 
       const audioCtx = new AudioContext();
       audioCtxRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
       const analyzer = audioCtx.createAnalyser();
-      analyzer.fftSize = 256;
-      analyzer.smoothingTimeConstant = 0.75;
+      analyzer.fftSize = 64;
+      analyzer.smoothingTimeConstant = 0.8;
       source.connect(analyzer);
       analyzerRef.current = analyzer;
 
@@ -161,24 +179,39 @@ export default function Home() {
       };
       recorder.start();
       recorderRef.current = recorder;
-      setPhase("recording");
-      setSeconds(0);
+      setListening(true);
       timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
       animationRef.current = requestAnimationFrame(updateAnalyzer);
     } catch {
+      armingRef.current = false;
+      setListening(false);
       setError("Micro inaccessible. Autorise le micro dans le navigateur.");
+      setPhase("idle");
     }
   }
 
   function stopRecording() {
+    sessionRef.current += 1;
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
     analyzerRef.current = null;
-    recorderRef.current?.stop();
+    const recorder = recorderRef.current;
     recorderRef.current = null;
-    setAnalyzerData(new Array(32).fill(0.1));
+    armingRef.current = false;
+    if (!recorder || recorder.state === "inactive") {
+      setPhase("idle");
+      setListening(false);
+      void audioCtxRef.current?.close();
+      audioCtxRef.current = null;
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    recorder.stop();
+    setListening(false);
+    void audioCtxRef.current?.close();
+    audioCtxRef.current = null;
     if (timerRef.current) clearInterval(timerRef.current);
   }
 
@@ -222,6 +255,21 @@ export default function Home() {
   }
 
   function goBack() {
+    sessionRef.current += 1;
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
+    const recorder = recorderRef.current;
+    if (recorder) {
+      recorder.onstop = null;
+      if (recorder.state !== "inactive") recorder.stop();
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    recorderRef.current = null;
+    armingRef.current = false;
+    setListening(false);
+    void audioCtxRef.current?.close();
+    audioCtxRef.current = null;
     setPending(null);
     setResult(null);
     setError(null);
@@ -236,41 +284,50 @@ export default function Home() {
 
   // ──── PHASE: IDLE ────
   if (phase === "idle") {
+    const clients = ledger?.customers.length ?? 0;
+    const due = ledger?.customers.reduce((sum, customer) => sum + customer.balance, 0) ?? 0;
+    const products = ledger?.products.length ?? 0;
     return (
-      <main className="phase-container">
-        <div className="phase-idle-content">
-          {/* Logo */}
-          <div className="idle-logo">
-            <Image src="/logo.png" alt="Hanouti" width={72} height={72} priority />
+      <main className="hero">
+        <div className="hero-arches" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <header className="hero-nav">
+          <button type="button" onClick={goBack} className="hero-brand">
+            <Image src="/logo.png" alt="" width={34} height={34} priority />
+            <span>Hanouti</span>
+          </button>
+          <div className="hero-nav-actions">
+            <SourceBadge provider={provider} />
+            <a href="/commander" target="_blank" rel="noopener noreferrer" className="hero-ghost">
+              Vue client
+            </a>
+            <button type="button" onClick={() => setPhase("results")} className="hero-gold">
+              La Karna
+            </button>
           </div>
+        </header>
 
-          {/* Welcome text */}
-          <h1 className="idle-title">
-            Bienvenue sur <span className="idle-title-accent">Hanouti</span>
-          </h1>
-          <p className="idle-subtitle">
-            {ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "Ton assistant vocal pour la Karna"}
+        <div className="hero-stage">
+          <p className="hero-kicker">{ledger ? `${ledger.shop.name} · ${ledger.shop.city}` : "Hanouti"}</p>
+          <button type="button" onClick={goBack} className="hero-title">Hanouti</button>
+          <p className="hero-lead">
+            L&apos;épicier parle. La vente, le crédit et le stock se notent tout seuls.
           </p>
 
-          {/* Big mic button */}
-          <button
-            type="button"
-            onClick={startRecording}
-            className="idle-mic-btn"
-            aria-label="Commencer l'enregistrement"
-          >
-            <div className="idle-mic-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <div className="hero-actions">
+            <button type="button" onClick={startRecording} className="hero-mic" aria-label="Commencer l'enregistrement">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="2" width="6" height="12" rx="3" />
                 <path d="M5 10a7 7 0 0 0 14 0" />
                 <line x1="12" y1="19" x2="12" y2="22" />
                 <line x1="8" y1="22" x2="16" y2="22" />
               </svg>
-            </div>
-          </button>
-          <p className="idle-hint">Appuie pour parler</p>
+            </button>
+          </div>
 
-          {/* Text input alternative */}
           <form
             className="idle-text-form"
             onSubmit={(e) => {
@@ -296,57 +353,19 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Sample phrases */}
-          <div className="idle-samples">
-            {SAMPLE_PHRASES.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => {
-                  setText(s.text);
-                  void sendText(s.text);
-                }}
-                className="idle-sample-chip"
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-
-          <DemoAudio
-            busy={busy}
-            onStart={() => { setBusy(true); setPhase("analyzing"); }}
-            onResult={(data, source) => {
-              setBusy(false);
-              setProvider(data.provider);
-              setPending({ data, source });
-              setPhase("results");
-            }}
-            onError={(m) => {
-              setBusy(false);
-              setError(m);
-              setPhase("idle");
-            }}
-          />
-
           {error && (
             <div className="phase-error">{error}</div>
           )}
-
-          {/* Bottom links */}
-          <div className="idle-footer">
-            <SourceBadge provider={provider} />
-            <a href="/commander" target="_blank" rel="noopener noreferrer" className="results-new-btn">
-              Vue client
-            </a>
-            <button type="button" onClick={() => setPhase("results")} className="results-new-btn">
-              La Karna
-            </button>
-            <button type="button" onClick={reset} className="idle-reset-btn">
-              Réinitialiser la démo
-            </button>
-          </div>
         </div>
+
+        <footer className="hero-proof">
+          <span><strong>{clients}</strong> {clients > 1 ? "clients" : "client"}</span>
+          <span><strong>{dh(due)}</strong> dus</span>
+          <span><strong>{products}</strong> produits au rayon</span>
+          <button type="button" onClick={reset} className="idle-reset-btn">
+            Réinitialiser la démo
+          </button>
+        </footer>
       </main>
     );
   }
@@ -361,23 +380,20 @@ export default function Home() {
 
           {/* Waveform visualizer */}
           <div className="recording-wave">
-            {analyzerData.map((val, i) => (
+            {Array.from({ length: 24 }, (_, i) => (
               <div
                 key={i}
-                className="recording-wave-bar"
-                style={{
-                  height: `${Math.max(4, val * 100)}%`,
-                  opacity: 0.4 + val * 0.6,
-                  transitionDelay: `${i * 2}ms`,
+                ref={(el) => {
+                  barsRef.current[i] = el;
                 }}
+                className="recording-wave-bar"
               />
             ))}
           </div>
 
-          {/* Label */}
           <p className="recording-label">
             <span className="recording-dot" />
-            Enregistrement en cours…
+            {listening ? "Enregistrement en cours…" : "Préparation du micro…"}
           </p>
 
           {/* Stop button */}
@@ -425,17 +441,17 @@ export default function Home() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <div className="results-header-brand">
-            <Image src="/logo.png" alt="Hanouti" width={36} height={36} />
+          <button type="button" onClick={goBack} className="results-header-brand">
+            <Image src="/logo.png" alt="" width={36} height={36} />
             <span className="results-header-title">Hanouti</span>
-          </div>
+          </button>
         </div>
         <div className="results-header-right">
           <SourceBadge provider={provider} />
           <a href="/commander" target="_blank" rel="noopener noreferrer" className="results-new-btn">
             Vue client
           </a>
-          <button type="button" onClick={goBack} className="results-new-btn">
+          <button type="button" onClick={goBack} className="results-new-btn results-gold-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="2" width="6" height="12" rx="3" />
               <path d="M5 10a7 7 0 0 0 14 0" />
@@ -484,7 +500,7 @@ export default function Home() {
           )}
           {ledger && (
             <div className="section-enter section-enter-delay-2">
-              <Ledger state={ledger} highlightId={result?.customer?.id ?? null} />
+              <Ledger state={ledger} highlightId={result?.customer?.id ?? null} onChanged={() => void refresh()} />
             </div>
           )}
           <div className="section-enter section-enter-delay-3">
@@ -492,7 +508,7 @@ export default function Home() {
           </div>
           {ledger && (
             <div className="section-enter section-enter-delay-3">
-              <Catalog products={ledger.products} />
+              <Catalog products={ledger.products} transactions={ledger.transactions} onSaved={() => void refresh()} />
             </div>
           )}
         </div>

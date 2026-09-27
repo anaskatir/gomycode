@@ -1,8 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import { daysAgo, dh } from "@/lib/format";
 import type { LedgerState } from "@/lib/types";
 
 /** La Karna : qui doit combien, et depuis quand il n'est pas passé. */
-export function Ledger({ state, highlightId }: { state: LedgerState; highlightId?: string | null }) {
+export function Ledger({
+  state,
+  highlightId,
+  onChanged,
+}: {
+  state: LedgerState;
+  highlightId?: string | null;
+  onChanged: () => void;
+}) {
   const lastByCustomer = new Map<string, string>();
   for (const tx of state.transactions) {
     if (!tx.customerId) continue;
@@ -11,6 +22,19 @@ export function Ledger({ state, highlightId }: { state: LedgerState; highlightId
   }
   const customers = [...state.customers].sort((a, b) => b.balance - a.balance);
   const outstanding = customers.reduce((s, c) => s + Math.max(0, c.balance), 0);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function remove(id: string, name: string) {
+    if (!window.confirm(`Retirer ${name} de la Karna ?`)) return;
+    setBusyId(id);
+    await fetch("/api/manage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete-customer", id }),
+    });
+    setBusyId(null);
+    onChanged();
+  }
 
   return (
     <section className="glass-card p-5">
@@ -46,9 +70,19 @@ export function Ledger({ state, highlightId }: { state: LedgerState; highlightId
                 {daysAgo(lastByCustomer.get(c.id))} · {c.points ?? 0} pts
               </p>
             </div>
-            <p className="font-semibold" style={{ color: c.balance > 0 ? "#dc2626" : "#059669" }}>
-              {dh(c.balance)}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="font-semibold" style={{ color: c.balance > 0 ? "#dc2626" : "#059669" }}>
+                {dh(c.balance)}
+              </p>
+              <button
+                type="button"
+                disabled={busyId === c.id}
+                onClick={() => void remove(c.id, c.name)}
+                className="text-xs text-stone-500 underline disabled:opacity-40"
+              >
+                Retirer
+              </button>
+            </div>
           </li>
         ))}
       </ul>

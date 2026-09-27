@@ -40,10 +40,10 @@ export function RemoteOrders({ onAccepted }: { onAccepted: () => void }) {
   }
 
   return (
-    <section className="glass-card p-5" style={{ borderColor: "rgba(14, 165, 233, 0.28)" }}>
-      <header className="flex items-baseline justify-between">
-        <h2 className="text-base font-semibold text-sky-950">Commandes sans venir</h2>
-        <p className="text-xs font-medium text-sky-700">{pending.length} en attente</p>
+    <section className="glass-card p-5">
+      <header className="flex items-baseline justify-between gap-3">
+        <h2 className="text-2xl text-stone-900">Commandes sans venir</h2>
+        <p className="shrink-0 text-xs font-medium text-stone-500">{pending.length} en attente</p>
       </header>
       <ul className="mt-3 space-y-3">
         {pending.map((order) => (
@@ -72,7 +72,7 @@ export function RemoteOrders({ onAccepted }: { onAccepted: () => void }) {
                   </p>
                 )}
               </div>
-              <p className="font-semibold text-stone-900">{dh(order.total)}</p>
+              <p className="shrink-0 whitespace-nowrap font-semibold text-stone-900">{dh(order.total)}</p>
             </div>
             <p className="mt-2 text-sm text-stone-700">
               {order.items.map((i) => `${i.quantity} ${i.unit} ${i.product}`).join(", ")}
